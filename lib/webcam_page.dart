@@ -16,13 +16,13 @@ class _WebCamPageState extends State<WebCamPage> {
   late VideoElement _webCamVideoElement;
   late CanvasElement _canvasElement;
   late CanvasRenderingContext2D _canvasContext;
+  bool _isFrontCamera = true;
 
   @override
   void initState() {
     super.initState();
     _webCamVideoElement = VideoElement();
-    ui.platformViewRegistry
-        .registerViewFactory('webcamVideoElement', (int viewId) => _webCamVideoElement);
+    ui.platformViewRegistry.registerViewFactory('webcamVideoElement', (int viewId) => _webCamVideoElement);
     _webCamWidget = HtmlElementView(key: UniqueKey(), viewType: 'webcamVideoElement');
 
     // Setup the canvas for capturing video frames
@@ -31,34 +31,64 @@ class _WebCamPageState extends State<WebCamPage> {
     _canvasElement.height = 750;
     _canvasContext = _canvasElement.getContext('2d') as CanvasRenderingContext2D;
 
-    // Request access to the webcam
-    window.navigator.getUserMedia(video: true).then((MediaStream stream) {
+    // Ensure jsQR is exposed
+    js.context.callMethod('exposeJsQR');
+
+    _initializeCamera();
+  }
+
+  void _initializeCamera() {
+    final constraints = {
+      'video': {
+        'facingMode': _isFrontCamera ? 'user' : 'environment',
+      },
+    };
+
+    window.navigator.mediaDevices!.getUserMedia(constraints).then((MediaStream stream) {
       _webCamVideoElement.srcObject = stream;
+      _webCamVideoElement.autoplay = true; // Ensure the video plays automatically
       _webCamVideoElement.onLoadedMetadata.listen((_) {
-        // Start scanning once the video metadata is loaded
         _startScanning();
       });
+    }).catchError((error) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error accessing camera: $error')));
+      print('Error accessing camera: $error');
     });
   }
 
   void _startScanning() {
-    window.requestAnimationFrame((_) => _scanFrame());
+    if (_webCamVideoElement.readyState == 2) {
+      // HAVE_ENOUGH_DATA
+      window.requestAnimationFrame((_) => _scanFrame());
+    } else {
+      _webCamVideoElement.onCanPlay.listen((_) {
+        window.requestAnimationFrame((_) => _scanFrame());
+      });
+    }
   }
 
   void _scanFrame() {
     _canvasContext.drawImage(_webCamVideoElement, 0, 0);
 
-    ImageData imageData =
-        _canvasContext.getImageData(0, 0, _canvasElement.width!, _canvasElement.height!);
-    var code = js.context
-        .callMethod('jsQR', [imageData.data, _canvasElement.width, _canvasElement.height]);
+    ImageData imageData = _canvasContext.getImageData(0, 0, _canvasElement.width!, _canvasElement.height!);
 
-    if (code != null) {
-      String qrCodeData = code['data'];
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('QR Code detected: $qrCodeData')));
+    // Call jsQR to decode the barcode
+    var result = js.context.callMethod('jsQR', [imageData.data, _canvasElement.width, _canvasElement.height]);
+
+    if (result != null && result['data'] != null) {
+      String qrCodeData = result['data'];
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('QR Code detected: $qrCodeData')));
     }
+
+    // Continue scanning
     window.requestAnimationFrame((_) => _scanFrame());
+  }
+
+  void _toggleCamera() {
+    setState(() {
+      _isFrontCamera = !_isFrontCamera;
+      _initializeCamera();
+    });
   }
 
   @override
@@ -77,16 +107,14 @@ class _WebCamPageState extends State<WebCamPage> {
                 onPressed: () {
                   js.context.callMethod("resFromJs");
                 },
-                child: const Text('Call JS'))
+                child: const Text('Call JS')),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _webCamVideoElement.srcObject!.active != null
-            ? _webCamVideoElement.play()
-            : _webCamVideoElement.pause(),
-        tooltip: 'Start stream, stop stream',
-        child: const Icon(Icons.camera_alt),
+        onPressed: _toggleCamera,
+        tooltip: 'Switch Camera',
+        child: const Icon(Icons.switch_camera),
       ),
     );
   }
