@@ -2,6 +2,7 @@ import 'dart:html';
 import 'dart:js' as js;
 import 'dart:ui_web' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class WebCamPage extends StatefulWidget {
@@ -22,7 +23,8 @@ class _WebCamPageState extends State<WebCamPage> {
   void initState() {
     super.initState();
     _webCamVideoElement = VideoElement();
-    ui.platformViewRegistry.registerViewFactory('webcamVideoElement', (int viewId) => _webCamVideoElement);
+    ui.platformViewRegistry
+        .registerViewFactory('webcamVideoElement', (int viewId) => _webCamVideoElement);
     _webCamWidget = HtmlElementView(key: UniqueKey(), viewType: 'webcamVideoElement');
 
     // Setup the canvas for capturing video frames
@@ -51,8 +53,11 @@ class _WebCamPageState extends State<WebCamPage> {
         _startScanning();
       });
     }).catchError((error) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error accessing camera: $error')));
-      print('Error accessing camera: $error');
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error accessing camera: $error')));
+      if (kDebugMode) {
+        print('Error accessing camera: $error');
+      }
     });
   }
 
@@ -70,14 +75,26 @@ class _WebCamPageState extends State<WebCamPage> {
   void _scanFrame() {
     _canvasContext.drawImage(_webCamVideoElement, 0, 0);
 
-    ImageData imageData = _canvasContext.getImageData(0, 0, _canvasElement.width!, _canvasElement.height!);
+    ImageData imageData =
+        _canvasContext.getImageData(0, 0, _canvasElement.width!, _canvasElement.height!);
 
     // Call jsQR to decode the barcode
-    var result = js.context.callMethod('jsQR', [imageData.data, _canvasElement.width, _canvasElement.height]);
+    var result = js.context
+        .callMethod('jsQR', [imageData.data, _canvasElement.width, _canvasElement.height]);
 
     if (result != null && result['data'] != null) {
       String qrCodeData = result['data'];
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('QR Code detected: $qrCodeData')));
+      if (kDebugMode) {
+        print('QR Code detected: $qrCodeData');
+      }
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('QR Code detected: $qrCodeData')));
+    } else {
+      if (kDebugMode) {
+        print('No QR Code detected');
+      }
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('No QR Code detected')));
     }
 
     // Continue scanning

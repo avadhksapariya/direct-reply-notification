@@ -3,11 +3,7 @@ function resFromJs() {
 }
 
 function exposeJsQR() {
-  if (typeof jsQR !== 'undefined') {
-    window.jsQR = jsQR;
-  } else {
-    console.error('jsQR is not loaded');
-  }
+  window.jsQR = jsQR;
 }
 
 // Call the function to expose jsQR
