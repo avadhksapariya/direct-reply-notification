@@ -112,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.of(context)
-                            .push(MaterialPageRoute(builder: (context) => const WebCamPage()));
+                            .push(MaterialPageRoute(builder: (context) => WebCamPage()));
                       },
                       child: const Text('Open WebCam'),
                     ),
