@@ -111,8 +111,15 @@ class _MyHomePageState extends State<MyHomePage> {
                     padding: const EdgeInsets.all(8.0),
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.of(context)
-                            .push(MaterialPageRoute(builder: (context) => WebCamPage()));
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => WebCamPage(
+                              onBarcodeDetected: (serialNo) {
+                                nameController.text = serialNo;
+                              },
+                            ),
+                          ),
+                        );
                       },
                       child: const Text('Open WebCam'),
                     ),

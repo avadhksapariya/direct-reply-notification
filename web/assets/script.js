@@ -19,10 +19,8 @@ domReady(function () {
     function onScanSuccess(decodeText, decodeResult) {
         alert("Your QR code is: " + decodeText);
 
-        // Pass the scanned QR code data to Dart
-        if (window.flutter_inappwebview) {
-            window.flutter_inappwebview.callHandler('onQrScanned', decodeText);
-        }
+        console.log("Scanned output: ", decodeText);
+        window.parent.postMessage(decodeText, '*');
     }
 
     // Function to handle errors

@@ -3,8 +3,22 @@ import 'dart:ui_web' as ui; // Required for registering the view factory
 
 import 'package:flutter/material.dart';
 
-class WebCamPage extends StatelessWidget {
-  WebCamPage({Key? key}) : super(key: key) {
+class WebCamPage extends StatefulWidget {
+  const WebCamPage({Key? key, required this.onBarcodeDetected}) : super(key: key);
+
+  final Function(String serialNo) onBarcodeDetected;
+
+  @override
+  State<WebCamPage> createState() => _WebCamPageState();
+}
+
+class _WebCamPageState extends State<WebCamPage> {
+  String receivedData = '';
+
+  @override
+  void initState() {
+    super.initState();
+
     // Register the view type 'qr-scanner-html'
     ui.platformViewRegistry.registerViewFactory(
       'qr-scanner-html',
@@ -13,10 +27,24 @@ class WebCamPage extends StatelessWidget {
         final iframe = html.IFrameElement()
           ..src = 'assets/index.html'
           ..style.border = 'none'; // Removes the default iframe border
-
         return iframe;
       },
     );
+
+    html.window.onMessage.listen((event) {
+      if (event.data != null && event.origin == html.window.location.origin) {
+        setState(() {
+          receivedData = event.data;
+          widget.onBarcodeDetected(event.data);
+          print('Barcode: $receivedData');
+
+          // Check if the receivedData is a valid barcode
+          if (receivedData.isNotEmpty) {
+            Navigator.pop(context);
+          }
+        });
+      }
+    });
   }
 
   @override
