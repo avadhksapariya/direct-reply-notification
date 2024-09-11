@@ -1,4 +1,3 @@
-import 'package:direct_reply_notification/webcam_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -107,13 +106,13 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: const Text('Pass data to native'),
                   ),
                   if (nameController.text.isNotEmpty) Text(msgFromNative),
-                  Padding(
+                  /*Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => WebCamPage(
+                            builder: (context) => ScreenBarcodeScanner(
                               onBarcodeDetected: (serialNo) {
                                 nameController.text = serialNo;
                               },
@@ -123,7 +122,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       },
                       child: const Text('Open WebCam'),
                     ),
-                  ),
+                  ),*/
                 ],
               ),
             ),

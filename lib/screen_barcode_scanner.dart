@@ -3,16 +3,16 @@ import 'dart:ui_web' as ui; // Required for registering the view factory
 
 import 'package:flutter/material.dart';
 
-class WebCamPage extends StatefulWidget {
-  const WebCamPage({Key? key, required this.onBarcodeDetected}) : super(key: key);
+class ScreenBarcodeScanner extends StatefulWidget {
+  const ScreenBarcodeScanner({Key? key, required this.onBarcodeDetected}) : super(key: key);
 
   final Function(String serialNo) onBarcodeDetected;
 
   @override
-  State<WebCamPage> createState() => _WebCamPageState();
+  State<ScreenBarcodeScanner> createState() => _ScreenBarcodeScannerState();
 }
 
-class _WebCamPageState extends State<WebCamPage> {
+class _ScreenBarcodeScannerState extends State<ScreenBarcodeScanner> {
   String receivedData = '';
 
   @override
